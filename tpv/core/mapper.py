@@ -104,7 +104,7 @@ class EntityToDestinationMapper(object):
 
         return entity_list
 
-    def map_to_destination(self, app, tool, user, job):
+    def map_to_destination(self, app, tool, user, job, resource_params):
         # 1. Find the entities relevant to this job
         entity_list = self._find_matching_entities(tool, user)
 
@@ -116,6 +116,7 @@ class EntityToDestinationMapper(object):
             'tool': tool,
             'user': user,
             'job': job,
+            'resource_params': resource_params,
             'mapper': self
         })
 
