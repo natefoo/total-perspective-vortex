@@ -648,7 +648,14 @@ class Destination(EntityWithRules):
         self.override_single_property(new_entity, self, entity, "max_accepted_cores")
         self.override_single_property(new_entity, self, entity, "max_accepted_mem")
         self.override_single_property(new_entity, self, entity, "max_accepted_gpus")
-        self.override_single_property(new_entity, self, entity, "handler_tags")
+        # handler_tags is never None, so the default copier would let a destination's empty list hide its parent's
+        self.override_single_property(
+            new_entity,
+            self,
+            entity,
+            "handler_tags",
+            field_copier=lambda e1, e2, p: getattr(e1, p, None) or getattr(e2, p, None) or [],
+        )
         return new_entity
 
     def evaluate(self, context: dict[str, Any]) -> Self:

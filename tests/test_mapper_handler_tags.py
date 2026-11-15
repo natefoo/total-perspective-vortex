@@ -29,6 +29,27 @@ destinations:
     tags: [shared, "tag_{cores}"]
 """
 
+INHERITED_TAGS = """
+global:
+  default_inherits: base_default
+destinations:
+  base_default:
+    abstract: true
+    tags: [from_default]
+  plain:
+    runner: local
+  parent:
+    abstract: true
+    tags: [from_parent]
+  child:
+    runner: local
+    inherits: parent
+  child_with_own_tags:
+    runner: local
+    inherits: parent
+    tags: [own]
+"""
+
 
 class TestMapperHandlerTags(unittest.TestCase):
 
@@ -61,6 +82,21 @@ class TestMapperHandlerTags(unittest.TestCase):
         )
         self.assertTrue(any("'templated_name' has a templated name" in line for line in logs.output), logs.output)
         self.assertTrue(any("'templated_tag' has templated tags" in line for line in logs.output), logs.output)
+
+    def test_inherited_destination_tags_registered(self):
+        with tempfile.NamedTemporaryFile("w+t", suffix=".yml") as tmp_file:
+            self._write_config(INHERITED_TAGS, tmp_file.name)
+            gateway.lock_and_load_mapper(self.app, "tpv_dispatcher", [tmp_file.name])
+        self.assertEqual(
+            self.registered,
+            {
+                "tpv_dispatcher": {
+                    "from_default": {"plain"},
+                    "from_parent": {"child"},
+                    "own": {"child_with_own_tags"},
+                }
+            },
+        )
 
     def test_reload_replaces_registered_tags(self):
         with tempfile.NamedTemporaryFile("w+t", suffix=".yml") as tmp_file:
