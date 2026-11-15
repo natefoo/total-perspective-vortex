@@ -107,16 +107,16 @@ class EntityToDestinationMapper(object):
             dest_name = destination.dest_name or destination.id
             if "{" in dest_name:
                 log.info(
-                    "Destination '%s' has a templated name, its tags will not count toward Galaxy's tag-based "
-                    "concurrency limits",
+                    "Destination '%s' has a templated name, Galaxy's tag-based concurrency limits will only count its "
+                    "jobs for jobs queued to that same destination",
                     destination.id,
                 )
                 continue
             tags = [tag for tag in destination.handler_tags if "{" not in tag]
             if len(tags) < len(destination.handler_tags):
                 log.info(
-                    "Destination '%s' has templated tags, they will not count toward Galaxy's tag-based concurrency "
-                    "limits",
+                    "Destination '%s' has templated tags, Galaxy's concurrency limits on those tags will only count "
+                    "the jobs in this destination",
                     destination.id,
                 )
             for tag in tags:

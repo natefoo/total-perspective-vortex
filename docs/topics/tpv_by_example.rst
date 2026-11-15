@@ -204,9 +204,11 @@ destinations in Galaxy's job configuration that carry the same tag:
        tag: long
        value: 4
 
-Only destinations with literal names and tags count. A destination whose name
-(`destination_name_override`) is templated is not counted, nor is any templated tag, since their values are only
-known once a job is mapped.
+Only destinations with literal names and tags are registered with Galaxy, since a templated name
+(`destination_name_override`) or tag is only known once a job is mapped. Galaxy still applies the limit to a job
+mapped to such a destination, but it then counts only the jobs in that same destination and in the registered
+destinations. Jobs in a destination with a templated name are not counted for jobs queued to any other destination
+with the tag, so the limit can be exceeded. Use literal names and tags where a limit must hold.
 
 Tool type tags
 ^^^^^^^^^^^^^^
