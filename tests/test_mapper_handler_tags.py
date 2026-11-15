@@ -102,6 +102,15 @@ class TestMapperHandlerTags(unittest.TestCase):
         gateway.register_destination_tags(self.app, "tpv_dispatcher", untagged_mapper)
         self.assertEqual(job_config.get_destination_ids_for_tag("shared"), set())
 
+    def test_galaxy_without_tag_registration_still_loads(self):
+        # Galaxy < 27.0 has no set_dynamic_destination_tags
+        self.app.job_config = object()
+        with tempfile.NamedTemporaryFile("w+t", suffix=".yml") as tmp_file:
+            self._write_config(TAGGED_DESTINATIONS, tmp_file.name)
+            mapper = gateway.lock_and_load_mapper(self.app, "tpv_dispatcher", [tmp_file.name])
+        self.assertIs(gateway.ACTIVE_DESTINATION_MAPPERS["tpv_dispatcher"], mapper)
+        self.assertEqual(self.registered, {})
+
     def test_inherited_destination_tags_registered(self):
         with tempfile.NamedTemporaryFile("w+t", suffix=".yml") as tmp_file:
             self._write_config(INHERITED_TAGS, tmp_file.name)
