@@ -126,31 +126,13 @@ class TestMapperHandlerTags(unittest.TestCase):
             },
         )
 
-    def test_reload_replaces_registered_tags(self):
-        with tempfile.NamedTemporaryFile("w+t", suffix=".yml") as tmp_file:
-            self._write_config(TAGGED_DESTINATIONS, tmp_file.name)
-            gateway.lock_and_load_mapper(self.app, "tpv_dispatcher", [tmp_file.name])
-            self.assertIn("normal_only", self.registered["tpv_dispatcher"])
-
-            self._write_config(
-                """
-destinations:
-  normal:
-    runner: local
-    tags: [shared]
-""",
-                tmp_file.name,
-            )
-            # wait for reload
-            time.sleep(2)
-        self.assertEqual(self.registered, {"tpv_dispatcher": {"shared": {"normal"}}})
-
     def test_reload_registers_each_referrer(self):
         with tempfile.NamedTemporaryFile("w+t", suffix=".yml") as tmp_file:
             self._write_config(TAGGED_DESTINATIONS, tmp_file.name)
             gateway.lock_and_load_mapper(self.app, "tpv_dispatcher1", [tmp_file.name])
             gateway.lock_and_load_mapper(self.app, "tpv_dispatcher2", [tmp_file.name])
             self.assertEqual(set(self.registered), {"tpv_dispatcher1", "tpv_dispatcher2"})
+            self.assertIn("normal_only", self.registered["tpv_dispatcher1"])
 
             self._write_config(
                 """
