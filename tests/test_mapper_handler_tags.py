@@ -3,6 +3,8 @@ import tempfile
 import time
 import unittest
 
+from galaxy.jobs import JobConfiguration
+
 from tpv.commands.test import mock_galaxy
 from tpv.rules import gateway
 
@@ -82,6 +84,23 @@ class TestMapperHandlerTags(unittest.TestCase):
         )
         self.assertTrue(any("'templated_name' has a templated name" in line for line in logs.output), logs.output)
         self.assertTrue(any("'templated_tag' has templated tags" in line for line in logs.output), logs.output)
+
+    @unittest.skipUnless(hasattr(JobConfiguration, "set_dynamic_destination_tags"), "requires Galaxy >= 27.0")
+    def test_galaxy_finds_registered_destinations_by_tag(self):
+        # use Galaxy's own method instead of the recorder
+        del self.app.job_config.set_dynamic_destination_tags
+        with tempfile.NamedTemporaryFile("w+t", suffix=".yml") as tmp_file:
+            self._write_config(TAGGED_DESTINATIONS, tmp_file.name)
+            gateway.lock_and_load_mapper(self.app, "tpv_dispatcher", [tmp_file.name])
+        job_config = self.app.job_config
+        self.assertEqual(job_config.get_destination_ids_for_tag("shared"), {"normal", "long_dest", "templated_tag"})
+        self.assertEqual(job_config.get_destination_ids_for_tag("normal_only"), {"normal"})
+        self.assertEqual(job_config.get_destination_ids_for_tag("abstract_only"), set())
+
+        # registering again, as a reload does, replaces what the referrer registered before
+        untagged_mapper = gateway.load_destination_mapper([{"destinations": {"normal": {"runner": "local"}}}])
+        gateway.register_destination_tags(self.app, "tpv_dispatcher", untagged_mapper)
+        self.assertEqual(job_config.get_destination_ids_for_tag("shared"), set())
 
     def test_inherited_destination_tags_registered(self):
         with tempfile.NamedTemporaryFile("w+t", suffix=".yml") as tmp_file:
