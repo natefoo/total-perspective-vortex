@@ -174,6 +174,8 @@ These TPV defined scheduling tags should be contrasted with Galaxy's destination
 https://github.com/galaxyproject/galaxy/blob/0a0d68b7feed5e303ed762f6586ea9757219c6f7/lib/galaxy/config/sample/job_conf.sample.yml#L1037
 Galaxy handler tags can be defined as simply `tags` at the destination.
 
+.. _tag-concurrency-limits:
+
 With Galaxy 27.0 or later, these tags also apply to Galaxy's tag-based concurrency limits
 (``environment_user_concurrent_jobs`` and ``environment_total_concurrent_jobs`` with a ``tag``), alongside any
 destinations in Galaxy's job configuration that carry the same tag:
@@ -696,10 +698,10 @@ Per-user resource pools
 -----------------------
 A *resource pool* caps the aggregate cores, memory and GPUs a single user may consume across
 their concurrently active jobs. This bounds a user's total resource *consumption*, complementing
-Galaxy's existing concurrency limits, which bound the *number* of concurrent jobs — ten small
-jobs and ten large jobs hit the same job-count limit but tie up very different amounts of the
-cluster. Support for User Defined Tools (UDTs) was the motivating use case, but the feature
-applies to any tool.
+Galaxy's existing :ref:`concurrency limits <tag-concurrency-limits>`, which bound the *number* of
+concurrent jobs — ten small jobs and ten large jobs hit the same job-count limit but tie up very
+different amounts of the cluster. Support for User Defined Tools (UDTs) was the motivating use
+case, but the feature applies to any tool.
 
 Pools are a **first-class TPV entity**, declared in a top-level ``pools:`` collection alongside
 ``tools:``, ``users:``, ``roles:`` and ``destinations:``. A pool governs a job when the job's
@@ -801,7 +803,9 @@ the pool; ``oversize.max_concurrent`` still limits the number of oversize jobs.
    are committed only after a destination has successfully evaluated. All matching pools admit
    the job atomically, so a rejected or deferred mapping does not leave partial reservations.
    Accounting begins when TPV returns a destination; Galaxy may still defer dispatch afterwards
-   for its own concurrency limits or quota checks.
+   for its own :ref:`concurrency limits <tag-concurrency-limits>` or quota checks. A job that
+   waits there keeps its pool allocation. Note also that those limits select jobs by the ``tags``
+   of the destination, while a pool selects them by the job's scheduling tags.
 
 .. note::
    Enforcement is **fail-closed**: if the allocation store cannot be reached, TPV cannot check
